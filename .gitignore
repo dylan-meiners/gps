@@ -6,3 +6,4 @@ Debug/*
 .vs/*
 .vscode/*
 arduino/*
+*.txt
