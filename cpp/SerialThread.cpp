@@ -2,8 +2,9 @@
 
 extern GPRMC_STRUCT GPRMC;
 extern uint FLAGS;
-extern uchar* buffer;
 extern FILE* fp;
+
+uchar buffer[1024] = { 0 };
 
 void serial_main() {
 

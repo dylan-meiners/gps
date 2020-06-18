@@ -3,8 +3,6 @@
 extern Waypoint** waypoints;
 extern Waypoint** next_open;
 extern Waypoint** last_waypoint_slot;
-extern uint content_page_index;
-extern uint num_content_pages;
 extern GPRMC_STRUCT GPRMC;
 extern double* distances;
 extern double* last_distance_slot;
@@ -12,10 +10,14 @@ extern FILE* fp;
 
 wchar_t** screens = (wchar_t**)malloc(sizeof(wchar_t*)); //only one to start
 wchar_t* master = (wchar_t*)malloc(TOTAL_CHARS * sizeof(wchar_t)); //master buffer
+wchar_t* map = (wchar_t*)malloc(TOTAL_CHARS * sizeof(wchar_t));
 wchar_t* page_one = (wchar_t*)malloc(TOTAL_CHARS * sizeof(wchar_t)); //page one
 HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, NULL, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
 DWORD dwBytesWritten = 0;
 wchar_t buf[256];
+
+uint content_page_index = 1;
+uint num_content_pages = 2;
 
 bool console_init() {
 
@@ -34,9 +36,16 @@ bool console_init() {
 		fprintf(fp, "[%s] FATAL: ERROR | At function: \"%s\", line: %d | MALLOC FAILED CREATING screens (plural)!\n", current_time().c_str(), __FUNCTION__, __LINE__);
 		return false;
 	}
+	if (map == NULL) {
 
-	screens[0] = page_one;
+		fprintf(fp, "[%s] FATAL: ERROR | At function: \"%s\", line: %d | MALLOC FAILED CREATING map!\n", current_time().c_str(), __FUNCTION__, __LINE__);
+		return false;
+	}
+
+	screens[0] = map;
+	screens[1] = page_one;
 	SetConsoleActiveScreenBuffer(hConsole);
+
 	return true;
 }
 
@@ -55,9 +64,10 @@ bool update() {
 		L"%s                                                                                            Page %d                                                                                            %s\0",
 		(content_page_index != 0 && num_content_pages != 1) ? L"<----" : L"     ",
 		content_page_index + 1,
-		(content_page_index != num_content_pages && num_content_pages != 1) ? L"---->" : L"     "
+		(content_page_index + 1 < num_content_pages) ? L"---->" : L"     "
 	);
 	wstrcpy(master + WIDTH * (HEIGHT - 1), buf);
+	//SetPixel(hConsole, )
 
 	uint offset = GPRMC_START_OFFSET;
 	swprintf_s(buf, 256, L"Current GPRMC Data:\0");
@@ -127,7 +137,7 @@ bool update() {
 
 	offset += WIDTH * 2;
 	uint old = content_page_index;
-	content_page_index = 0;
+	content_page_index = 1;
 	for (uint i = 0; i < last_waypoint_slot - waypoints; i++) {
 
 		if (waypoints[i] != NULL) {

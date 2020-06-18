@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Windows.h>
 #include "typedefs.h"
 
 #define USE_FAKE_DATA

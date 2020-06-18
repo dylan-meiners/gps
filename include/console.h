@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Windows.h>
+#include <io.h>
+#include <fcntl.h>
 #include <cstdlib>
 #include "typedefs.h"
 #include "ks.h"
