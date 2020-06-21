@@ -7,6 +7,9 @@
 
 const uint WIDTH = 200;
 const uint HEIGHT = 45;
+const uint MAX_MAP_WIDTH = WIDTH - 10;
+const uint MAX_MAP_HEIGHT = HEIGHT - 10;
+const double MAP_AR = (double)MAX_MAP_WIDTH / MAX_MAP_HEIGHT;
 const uint TOTAL_CHARS = WIDTH * HEIGHT;
 const uint NUM_INITIAL_WAYPOINT = 10;
 const uint CONTENT_START = WIDTH * 12;
@@ -35,3 +38,8 @@ const uint FLAG_END = 0x01;
 const uint FLAG_SERIAL_END = 0x02;
 const uint FLAG_DO_DEBUG = 0x04;
 const uint FLAG_CONSOLE_END = 0x08;
+
+//TODO: SET ACTUAL
+const uint HANDS_OFF_ZONE = 1000000;
+const uint SLIGHT_TURN_ZONE = 10;
+const uint THROW_DISTANCE = 300;

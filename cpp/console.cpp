@@ -19,6 +19,19 @@ wchar_t buf[256];
 uint content_page_index = 1;
 uint num_content_pages = 2;
 
+double least_x = 0;
+double greatest_x = 0;
+double least_y = 0;
+double greatest_y = 0;
+uint frame_width = 0;
+uint frame_height = 0;
+int x_offset = 0;
+int y_offset = 0;
+double x_bounds = 0.0;
+double y_bounds = 0.0;
+bool longer = false;
+uint x_multiplier = 0; //when in proportion to height, the font size makes the scale be 1:2, not 1:1
+
 bool console_init() {
 
 	if (master == NULL) {
@@ -135,7 +148,7 @@ bool update() {
 	swprintf_s(buf, 256, L"Route build status: %s\0", (distances == nullptr) ? L"not built" : L"built");
 	wstrcpy(master + offset, buf);
 
-	offset += WIDTH * 2;
+	offset = CONTENT_START;
 	uint old = content_page_index;
 	content_page_index = 1;
 	for (uint i = 0; i < last_waypoint_slot - waypoints; i++) {
@@ -163,20 +176,27 @@ bool update() {
 			swprintf_s(buf, 256, L"%c\0", waypoints[i]->latitude->dir);
 			wstrcpy(screens[content_page_index] + offset, buf);
 			offset += CHAR_MAX_LEN + SPACES;
-			swprintf_s(buf, 256, L"%f\0", waypoints[i]->rel_x);
+			swprintf_s(buf, 256, L"%f\0", waypoints[i]->global_rel_x);
 			wstrcpy(screens[content_page_index] + offset, buf);
 			offset += GENERIC_DOUBLE_MAX_LEN + SPACES;
-			swprintf_s(buf, 256, L"%f\0", waypoints[i]->rel_y);
+			swprintf_s(buf, 256, L"%f\0", waypoints[i]->global_rel_y);
 			wstrcpy(screens[content_page_index] + offset, buf);
+			offset += GENERIC_DOUBLE_MAX_LEN + SPACES;
+			swprintf_s(buf, 256, L"%f\0", waypoints[i]->local_rel_x);
+			wstrcpy(screens[content_page_index] + offset, buf);
+			offset += GENERIC_DOUBLE_MAX_LEN + SPACES;
+			swprintf_s(buf, 256, L"%f\0", waypoints[i]->local_rel_y);
+			wstrcpy(screens[content_page_index] + offset, buf);
+			offset += GENERIC_DOUBLE_MAX_LEN + SPACES;
 
-			offset = CONTENT_START + WIDTH * (i % 30) + WIDTH / 2;
+			//offset = CONTENT_START + WIDTH * (i % 30) + WIDTH / 2;
 			if (distances != nullptr) {
 
 				swprintf_s(buf, 256, L"Distance from waypoint %d to %d: %f\0", i + 1, (i + 2 != last_distance_slot - distances + 2) ? i + 2 : 1, distances[i]);
 			}
 			else swprintf_s(buf, 256, L"Distances are not calculated yet!  Press 'b' to build.\0");
 			wstrcpy(screens[content_page_index] + offset, buf);
-			offset += WIDTH / 2;
+			offset = CONTENT_START + WIDTH * (i + 1);
 			//if we need to go to another screen
 			if (offset >= CONTENT_STOP) {
 
@@ -214,6 +234,113 @@ bool update() {
 	}
 	content_page_index = old;
 
+	//MAP
+	swprintf_s(buf, 256, L"                                                                                                  Map                                                                                                   \0");
+	wstrcpy(screens[0] + WIDTH * 1, buf);
+
+	//top
+	for (uint i = 0; i < MAX_MAP_WIDTH + 4; i++) {
+
+		screens[0][((HEIGHT - MAX_MAP_HEIGHT) / 2 - 2) * WIDTH + i + (WIDTH - MAX_MAP_WIDTH) / 2 - 2] = FULL;
+	}
+	//left
+	for (uint i = 0; i < MAX_MAP_HEIGHT + 4; i++) {
+
+		screens[0][(i + (HEIGHT - MAX_MAP_HEIGHT) / 2 - 2) * WIDTH + (WIDTH - MAX_MAP_WIDTH) / 2 - 2] = FULL;
+	}
+	//bottom
+	for (uint i = 0; i < MAX_MAP_WIDTH + 4; i++) {
+
+		screens[0][(HEIGHT - ((HEIGHT - MAX_MAP_HEIGHT) / 2 - 2)) * WIDTH + i + (WIDTH - MAX_MAP_WIDTH) / 2 - 2] = FULL;
+	}
+	//right
+	for (uint i = 0; i < MAX_MAP_HEIGHT + 4; i++) {
+
+		screens[0][(i + (HEIGHT - MAX_MAP_HEIGHT) / 2 - 2) * WIDTH + WIDTH - ((WIDTH - MAX_MAP_WIDTH) / 2 - 2)] = FULL;
+	}
+
+	//if there are at least two waypoints available, make a map out of it
+	if (distances != nullptr) {
+
+		for (uint i = 0; i < last_waypoint_slot - waypoints; i++) {
+
+			//it looks backwards, but the greatest number is the lowest number
+			if (waypoints[i]->global_rel_x < greatest_x) greatest_x = waypoints[i]->global_rel_x;
+			if (waypoints[i]->global_rel_x > least_x) least_x = waypoints[i]->global_rel_x;
+			if (waypoints[i]->global_rel_y < greatest_y) greatest_y = waypoints[i]->global_rel_y;
+			if (waypoints[i]->global_rel_y > least_y) least_y = waypoints[i]->global_rel_y;
+		}
+
+		//some more backwards nonesense :)
+		x_bounds = -greatest_x + least_x;
+		y_bounds = -greatest_y + least_y;
+		longer = x_bounds / y_bounds >= MAP_AR;
+		x_multiplier = longer ? 1 : 2; //when in proportion to height, the font size makes the scale be 1:2, not 1:1
+		
+		if (longer) {
+
+			frame_width = MAX_MAP_WIDTH;
+			frame_height = RoundLit(MAX_MAP_WIDTH * y_bounds / x_bounds);
+		}
+		else {
+
+			frame_width = RoundLit(MAX_MAP_HEIGHT * x_bounds / y_bounds);
+			frame_height = MAX_MAP_HEIGHT;
+		}
+
+		x_offset = (WIDTH - frame_width * x_multiplier) / 2;
+		y_offset = (HEIGHT - frame_height) / 2;
+
+		for (uint i = 0; i < last_waypoint_slot - waypoints; i++) {
+
+			plot(waypoints[i]->global_rel_x, waypoints[i]->global_rel_y, FULL);
+		}
+
+		//after plotting the waypoints, draw lines in between the distances
+		if (distances != nullptr) {
+
+			double slope = 0.0;
+			double x_diff = 0.0;
+			double y_diff = 0.0;
+			double x = 0.0;
+			double y = 0.0;
+			char c = 'o';
+			for (uint i = 0; i < last_waypoint_slot - waypoints; i++) {
+
+				int index_of_next = (i + 1 != last_waypoint_slot - waypoints) ? i + 1 : 0;
+				x_diff = waypoints[index_of_next]->global_rel_x - waypoints[i]->global_rel_x;
+				y_diff = waypoints[index_of_next]->global_rel_y - waypoints[i]->global_rel_y;
+				slope = y_diff / x_diff;
+				for (int j = 0; j < 200; j++) {
+
+					if (waypoints[i]->global_rel_x > waypoints[index_of_next]->global_rel_x) { //if we going right
+						
+						x = waypoints[i]->global_rel_x - (j + 1) * abs(x_diff) / 200;
+					}
+					else {
+
+						x = waypoints[i]->global_rel_x + (j + 1) * abs(x_diff) / 200;
+					}
+					y = slope * (x - waypoints[i]->global_rel_x) + waypoints[i]->global_rel_y;
+					//-\|/
+					if (slope < 0) {
+
+						if (slope >= -.5) c = '-';
+						else if (slope > -2) c = '/';
+						else c = '|';
+					}
+					else {
+
+						if (slope <= .5) c = '-';
+						else if (slope < 2) c = '\\';
+						else c = c = '|';
+					}
+					plot(x, y, c);
+				}
+			}
+		}
+	}
+
 	/*
 	The different console pages are just copied to the content portion of
 	the first master, and then the first master is shown.  We should only
@@ -222,10 +349,14 @@ bool update() {
 	END OF CONTENT (exclusive) = master[0] + WIDTH * (HEIGHT - 2);
 	*/
 
-	for (uint i = 0; i < CONTENT_STOP - CONTENT_START; i++) {
+	if (content_page_index != 0) {
 
-		master[i + CONTENT_START] = screens[content_page_index][i + CONTENT_START];
+		for (uint i = 0; i < CONTENT_STOP - CONTENT_START; i++) {
+
+			master[i + CONTENT_START] = screens[content_page_index][i + CONTENT_START];
+		}
 	}
+	else for (uint i = 0; i < TOTAL_CHARS; i++) master[i] = screens[0][i];
 
 	//fprintf(fp, "[%s] %d %d\n", current_time().c_str(), content_page_index, num_content_pages);
 	WriteConsoleOutputCharacter(hConsole, master, TOTAL_CHARS, { 0, 0 }, &dwBytesWritten);
@@ -256,4 +387,30 @@ void clear_pages() {
 
 		for (uint j = 0; j < TOTAL_CHARS; j++) screens[i][j] = 0;
 	}
+}
+
+void plot(double x, double y, int c) {
+
+	int x_coord = 0;
+	int y_coord = 0;
+
+	if (x < 0) {
+
+		//+ bc its negative
+		x_coord = RoundLit((-x + least_x) * frame_width / x_bounds);
+	}
+	else {
+
+		x_coord = RoundLit((least_x - x) * frame_width / x_bounds);
+	}
+	if (y < 0) {
+
+		y_coord = RoundLit((-y + least_y) * frame_height / y_bounds);
+	}
+	else {
+
+		y_coord = RoundLit((least_y - y) * frame_height / y_bounds);
+	}
+
+	if (screens[0][(y_coord + y_offset) * WIDTH + x_coord * x_multiplier + x_offset] != FULL) screens[0][(y_coord + y_offset) * WIDTH + x_coord * x_multiplier + x_offset] = c;
 }

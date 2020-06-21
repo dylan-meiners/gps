@@ -12,8 +12,10 @@ struct Position {
 struct Waypoint {
 	Position* latitude;
 	Position* longitude;
-	double rel_x;
-	double rel_y;
+	double global_rel_x;
+	double global_rel_y;
+	double local_rel_x;
+	double local_rel_y;
 };
 
 struct GPRMC_STRUCT {

@@ -69,11 +69,11 @@ void serial_main() {
 				}
 				else {
 
-					GPRMC.t_h = uchar_star_to_uint(ptr, 2);
+					GPRMC.t_h = (int)uchar_star_to_uint(ptr, 2);
 					ptr += 2;
-					GPRMC.t_m = uchar_star_to_uint(ptr, 2);
+					GPRMC.t_m = (int)uchar_star_to_uint(ptr, 2);
 					ptr += 2;
-					GPRMC.t_s = uchar_star_to_uint(ptr, 2);
+					GPRMC.t_s = (int)uchar_star_to_uint(ptr, 2);
 
 					while (*++ptr != ','); //to active or void
 					ptr++;
@@ -108,7 +108,7 @@ void serial_main() {
 					ptr -= 2; //go to start of min
 					while (*--ptr != ',') { acc++; } //ptr is at ',' when done
 					ptr++; //go to start of degress
-					GPRMC.latitude.deg = uchar_star_to_uint(ptr, acc);
+					GPRMC.latitude.deg = (int)uchar_star_to_uint(ptr, acc);
 					ptr += acc; //go to start of min
 					GPRMC.latitude.min = parse_double_to_comma(ptr);
 
@@ -143,7 +143,7 @@ void serial_main() {
 					ptr -= 2; //go to start of min
 					while (*--ptr != ',') { acc++; } //ptr is at ',' when done
 					ptr++; //go to start of degress
-					GPRMC.longitude.deg = uchar_star_to_uint(ptr, acc);
+					GPRMC.longitude.deg = (int)uchar_star_to_uint(ptr, acc);
 					ptr += acc; //go to start of min
 					GPRMC.longitude.min = parse_double_to_comma(ptr);
 
@@ -201,11 +201,11 @@ void serial_main() {
 				}
 				else {
 
-					GPRMC.d_d = uchar_star_to_uint(ptr, 2);
+					GPRMC.d_d = (int)uchar_star_to_uint(ptr, 2);
 					ptr += 2;
-					GPRMC.d_m = uchar_star_to_uint(ptr, 2);
+					GPRMC.d_m = (int)uchar_star_to_uint(ptr, 2);
 					ptr += 2;
-					GPRMC.d_y = uchar_star_to_uint(ptr, 2);
+					GPRMC.d_y = (int)uchar_star_to_uint(ptr, 2);
 
 					ptr += 3; //to magnetic variation
 				}

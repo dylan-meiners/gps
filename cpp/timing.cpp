@@ -14,9 +14,9 @@ std::string current_time() {
 		return "INVALID";
 	}
 	localtime_s(bt, &timer);
-	std::ostringstream oss;
-	oss << std::put_time(bt, "%H:%M:%S");
-	oss << '.' << std::setfill('0') << std::setw(6) << ms.count();
-	std::string s = oss.str();
+	std::ostringstream ostream;
+	//ostream << std::put_time(bt, "%H:%M:%S");
+	//ostream << '.' << std::setfill('0') << std::setw(6) << ms.count();
+	std::string s = "A";//ostream.str();
 	return s;
 }

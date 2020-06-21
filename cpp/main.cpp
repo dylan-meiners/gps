@@ -38,6 +38,7 @@ Because of where I live, the coordinate plane will be like this:
 
 uint FLAGS = 0;
 bool running = true;
+bool executing = false;
 
 extern FILE* fp;
 extern uint content_page_index;
@@ -67,6 +68,9 @@ int main() {
 			b			Build route; connect waypoints
 			left arrow	Switch to the previous page, if we can
 			right arrow	Switch to the next page, if we can
+			e			Execute the route
+
+			else		Stop executing
 			*/
 
 			ch = _getch();
@@ -107,10 +111,17 @@ int main() {
 				}
 			}
 
+			case 'e':
+				executing = true;
+				break;
+
 			default:
+				executing = false;
 				break;
 			}
 		}
+
+		if (executing) step();
 		
 		if (!update()) fprintf(fp, "[%s] ERROR | At function: \"%s\", line: %d | Console update failed!\n", current_time().c_str(), __FUNCTION__, __LINE__);
 

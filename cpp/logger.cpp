@@ -49,13 +49,15 @@ void printWaypoints() {
 		if (waypoints[i] != NULL) {
 
 			fprintf(fp,
-				"[%s] Waypoint %d: %d %f %c    %d %f %c        %f    %f\n",
+				"[%s] Waypoint %d: %d %f %c    %d %f %c        %f    %f    %f    %f\n",
 				current_time().c_str(),
 				i + 1,
 				waypoints[i]->latitude->deg, waypoints[i]->latitude->min, waypoints[i]->latitude->dir,
 				waypoints[i]->longitude->deg, waypoints[i]->longitude->min, waypoints[i]->longitude->dir,
-				waypoints[i]->rel_x,
-				waypoints[i]->rel_y
+				waypoints[i]->global_rel_x,
+				waypoints[i]->global_rel_y,
+				waypoints[i]->local_rel_x,
+				waypoints[i]->local_rel_y
 			);
 		}
 		else fprintf(fp, "[%s] Waypoint: %d: NULL\n", current_time().c_str(), i + 1);
